@@ -1,0 +1,123 @@
+## ---- results="hide"-----------------------------------------------------
+library(gsrc)
+require(devtools)
+devtools::install_github("grafab/brassicaData")
+
+## ---- eval = FALSE-------------------------------------------------------
+#  files <- list.files("/YOUR/DATA/REPOSITORY/",
+#                      pattern = "idat",full.names = TRUE)
+
+## ---- eval = TRUE--------------------------------------------------------
+files <- list.files(system.file("extdata",
+                                package = "brassicaData"),
+                    full.names = TRUE, 
+                    pattern = "idat")
+
+## ---- eval = TRUE--------------------------------------------------------
+samples <- read_sample_sheets(files = 
+                                list.files(system.file("extdata",package = "brassicaData"),
+                                           full.names = TRUE, 
+                                           pattern = "csv"))
+
+## ---- eval = TRUE--------------------------------------------------------
+controls <- grep("H2O", samples$Names)
+if(length(controls) > 0) samples <- samples[-controls, ]
+files <- grep(paste(samples$ID, collapse = "|"), files, value = TRUE)
+
+## ---- eval = TRUE--------------------------------------------------------
+column_names <- sapply(strsplit(files, split = "/"), FUN=function(x) x[length(x)])
+
+## ------------------------------------------------------------------------
+data(dictionary, package = "brassicaData", envir = environment())
+data(chrPos, package = "brassicaData", envir = environment())
+
+## ---- eval = TRUE--------------------------------------------------------
+raw_data <- read_intensities(files = files, 
+                             dict = dictionary, 
+                             cnames = column_names, 
+                             pos = chrPos)
+
+## ---- eval = TRUE--------------------------------------------------------
+str(raw_data)
+
+## ---- eval = TRUE--------------------------------------------------------
+raw_data <- rename_samples(raw_data, 
+                           samples = samples[,2:1], 
+                           suffix = c("_Grn", "_Red"))
+
+## ------------------------------------------------------------------------
+data(raw_napus, package = "brassicaData", envir = environment())
+
+## ---- fig.show = "hold", fig.width = 10, fig.height = 10-----------------
+check_raw(raw_napus, thresh = 28000, breaks = 20)
+
+## ---- eval = TRUE--------------------------------------------------------
+length(raw_napus$samples)
+raw_napus <- filt_samp(raw_napus, check_raw(raw = raw_napus, plot = FALSE, thresh = 28000))
+length(raw_napus$samples)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+boxplot(as.vector(raw_napus$raw[, seq(1, length(raw_napus$samples), 2)]),
+        as.vector(raw_napus$raw[, seq(2, length(raw_napus$samples), 2)]),
+        names = c("Green", "Red"))
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat <- intens_theta(raw_napus, norm = "both", scaling = "mean", transf = "log")
+str(norm_dat)
+
+## ---- eval = TRUE--------------------------------------------------------
+head(norm_dat$samples)
+norm_dat <- remove_suffix(norm_dat, "_Grn")
+head(norm_dat$samples)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+hist(norm_dat$intensity, breaks = 1000)
+hist(norm_dat$theta, breaks = 1000)
+
+## ---- eval = FALSE-------------------------------------------------------
+#  rm(raw_napus)
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat <- geno_baf_rratio(norm_dat, delthresh = 11)
+str(norm_dat)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+hist(norm_dat$baf, breaks = 1000)
+tmp <- table(norm_dat$geno, useNA = "ifany")
+barplot(tmp, names.arg = c(names(tmp)[1:4], "NA"))
+hist(norm_dat$rratio, breaks = 1000)
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat$theta <- norm_dat$intensities <- NULL
+
+## ---- eval = TRUE--------------------------------------------------------
+length(norm_dat$snps)
+norm_dat <- filt_snps(norm_dat, norm_dat$snps[is.na(rowMeans(norm_dat$baf, na.rm = TRUE))])
+length(norm_dat$snps)
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat <- segm(norm_dat)
+str(norm_dat)
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat <- cnv(norm_dat, dup = 0.03, del = -0.06)
+str(norm_dat)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+barplot(table(norm_dat$cnv))
+
+## ---- eval = TRUE--------------------------------------------------------
+data(synteny_blocks, package = "brassicaData", envir = environment())
+
+## ---- eval = TRUE--------------------------------------------------------
+norm_dat <- trans_location(norm_dat, synteny_blocks, min = 5)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+plot_gsr(norm_dat, sb = synteny_blocks, samp = 1)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+plot_gsr(norm_dat, sb = synteny_blocks, samp = 1, baf = TRUE, tl =TRUE)
+
+## ---- eval = TRUE, fig.show = "hold", fig.width = 10, fig.height = 10----
+plot_global(norm_dat, sb = synteny_blocks)
+
