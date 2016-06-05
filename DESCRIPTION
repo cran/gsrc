@@ -2,7 +2,7 @@ Package: gsrc
 Type: Package
 Title: Genome Structure Rearrangement Calling in Genomes with High
         Synteny
-Version: 1.0
+Version: 1.0.1
 Date: 2016-05-30
 Authors@R: c(
     person("Fabian", "Grandke", email = "grafabian@gmail.com", role = c("cre", "aut")),
@@ -22,9 +22,11 @@ Suggests: testthat, DNAcopy, knitr, rmarkdown, Ckmeans.1d.dp,
         KernSmooth
 VignetteBuilder: knitr
 Additional_repositories: https://grafab.github.io/drat/
+URL: http://github.com/grafab/gsrc
+BugReports: http://github.com/grafab/gsrc/issues
 NeedsCompilation: no
-Packaged: 2016-06-01 14:28:32 UTC; fabian
+Packaged: 2016-06-05 12:02:14 UTC; fabian
 Author: Fabian Grandke [cre, aut],
   Birgit Samans [aut]
 Repository: CRAN
-Date/Publication: 2016-06-02 06:06:38
+Date/Publication: 2016-06-05 15:06:22

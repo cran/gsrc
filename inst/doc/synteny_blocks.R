@@ -6,10 +6,10 @@ library(gsrc)
 ## ------------------------------------------------------------------------
 tf1 <- tempfile()
 utils::download.file(url="http://www.sciencedirect.com/science/MiamiMultiMediaURL/1-s2.0-S2352340915000062/1-s2.0-S2352340915000062-mmc6.xlsx/311593/html/S2352340915000062/5528a88e468e01866744f28fc42139c6/mmc6.xlsx",
-              destfile = tf1, method = "internal")
+              destfile = tf1, method = "internal", mode = "wb")
 synA <- openxlsx::read.xlsx(tf1)
 utils::download.file(url = "http://www.sciencedirect.com/science/MiamiMultiMediaURL/1-s2.0-S2352340915000062/1-s2.0-S2352340915000062-mmc7.xlsx/311593/html/S2352340915000062/d616ded5ee9399d4fe29df72435780c9/mmc7.xlsx",
-              destfile = tf1, method = "internal")
+              destfile = tf1, method = "internal", mode = "wb")
 synC <- openxlsx::read.xlsx(tf1)
 unlink(tf1)
 
